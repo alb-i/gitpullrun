@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+# 
+# License: GPL v3
+#
+
+set -e
+
+if [ $# -lt 3 ] ; then
+
+    echo "Usage:"
+    echo "   $0 REPOSITORY BRANCH Command Arg1 Arg2 ... ArgN"
+    echo "      pulls the latest head of the BRANCH in the REPOSITORY,"
+    echo "      then enters the directory of the repo-branch-combintaion and runs"
+    echo "      > Command Arg1 Arg2 ... ArgN"
+    echo "      there"
+
+    exit 1
+fi
+
+REPO=$1
+BRANCH=$2
+shift; shift
+
+if [ -z "$GPR_BASE_DIR" ] ; then
+    GPR_BASE_DIR=$HOME/.gitpullrun/base
+fi
+
+if ! [ -d "$GPR_BASE_DIR" ] ; then
+    mkdir -p "$GPR_BASE_DIR"
+fi
+
+SUBDIR="$GPR_BASE_DIR/$(echo $REPO//$BRANCH | md5sum | awk '{print $1;}')"
+
+if ! [ -z "$GPR_DIRECTORY" ] ; then
+    SUBDIR="$GPR_DIRECTORY"
+fi
+
+echo "REPOSITORY: $REPO"
+echo "BRANCH: $BRANCH"
+echo "cached directory: $SUBDIR"
+echo "COMMAND: $@"
+
+GPR_RESET_DIR='yes'
+
+if [ -d "$SUBDIR" ] ; then
+    if pushd "$SUBDIR" ; then
+    for iwontusethisvariable in 1; do
+        git reset --hard @{u} || break
+        git clean -fdx || break
+        git pull origin $BRANCH || break
+        CURRENT_BRANCH=$(git branch | sed 's/^[*] //')
+        [ "$CURRENT_BRANCH" != "$BRANCH" ] && break
+        GPR_RESET_DIR="$GPR_FORCE_CLONE"
+    done
+    popd
+    fi
+fi
+
+if ! [ -z "$GPR_RESET_DIR" ]; then
+    if [ -d "$SUBDIR" ] ; then
+        echo "Cleaning up cached directory: $SUBDIR"
+        rm -Rf "$SUBDIR"
+    fi
+    git clone -b $BRANCH --sparse -- $REPO $SUBDIR
+fi
+
+cd $SUBDIR
+
+echo
+echo "$(pwd)> $@"
+echo 
+
+"$@"
