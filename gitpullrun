@@ -61,7 +61,7 @@ if ! [ -z "$GPR_RESET_DIR" ]; then
         echo "Cleaning up cached directory: $SUBDIR"
         rm -Rf "$SUBDIR"
     fi
-    git clone -b $BRANCH --sparse -- $REPO $SUBDIR
+    git clone -b $BRANCH --depth 1 -- $REPO $SUBDIR
 fi
 
 cd $SUBDIR
