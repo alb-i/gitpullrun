@@ -29,7 +29,7 @@ if ! [ -d "$GPR_BASE_DIR" ] ; then
     mkdir -p "$GPR_BASE_DIR"
 fi
 
-SUBDIR="$GPR_BASE_DIR/$(echo $REPO//$BRANCH | md5sum | awk '{print $1;}')"
+SUBDIR="$GPR_BASE_DIR/$(echo $REPO//$BRANCH//$SALT | md5sum | awk '{print $1;}')"
 
 if ! [ -z "$GPR_DIRECTORY" ] ; then
     SUBDIR="$GPR_DIRECTORY"
